@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 
 lightning_logs
-output_image.jpg
+*.jpg

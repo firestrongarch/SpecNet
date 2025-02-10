@@ -1,0 +1,4 @@
+pytorch-lightning==2.5.0
+markupsafe==2.1.1
+tensorboard
+standard-imghdr
