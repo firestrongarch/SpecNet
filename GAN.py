@@ -201,16 +201,36 @@ if __name__ == "__main__":
                                     key=os.path.getmtime, default=None)
     print(f"自动恢复训练: {ckpt_path}" if ckpt_path else "开始新训练")
 
+    from pytorch_lightning.callbacks import ModelCheckpoint
     trainer = pl.Trainer(
         accelerator='gpu', devices='auto', max_epochs=25,
         logger=logger, enable_checkpointing=True, default_root_dir='.',
         num_sanity_val_steps=0,
-        callbacks=[pl.callbacks.ModelCheckpoint(
-            dirpath=os.path.join('lightning_logs', VERSION, 'checkpoints'),
-            filename='{epoch:02d}-{step}',
-            save_last=True,
-            every_n_epochs=5  # 每5个epoch保存一次模型
-        )]
+        callbacks=[
+            ModelCheckpoint(
+                dirpath=os.path.join('lightning_logs', VERSION, 'checkpoints'),
+                filename='g_loss_min',
+                monitor='g_loss',     # 监控指标
+                mode='min',           # 指标越小越好
+                save_top_k=1,         # 只保存最优的 checkpoint
+                every_n_train_steps=1,  # 每个step检查一次
+            ),
+            ModelCheckpoint(
+                dirpath=os.path.join('lightning_logs', VERSION, 'checkpoints'),
+                filename='d_loss_min',
+                monitor='d_loss',     # 监控指标
+                mode='min',           # 指标越小越好
+                save_top_k=1,         # 只保存最优的 checkpoint
+                every_n_train_steps=1,  # 每个step检查一次
+            ),
+            ModelCheckpoint(
+                dirpath=os.path.join('lightning_logs', VERSION, 'checkpoints'),
+                filename='{epoch:02d}-{step}',
+                every_n_epochs=5,   # 每5个epoch保存一次
+                save_top_k = -1,         # 每5个epoch保存一次, 不覆盖
+                save_last=True,      # 保存最新epoch
+            )
+        ]
     )
 
     model = GAN()
