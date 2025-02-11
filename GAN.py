@@ -184,6 +184,35 @@ class GAN(pl.LightningModule):
 
 # Train the model
 if __name__ == "__main__":
+    import argparse, glob, os, torch
+    from pytorch_lightning.loggers import TensorBoardLogger
+
+    torch.set_float32_matmul_precision('medium')
+    VERSION = 'V1'
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resume', type=str, help='从checkpoint恢复训练的路径')
+    args = parser.parse_args()
+
+    logger = TensorBoardLogger(save_dir='./', name='lightning_logs', version=VERSION)
+
+    # 判断是否存在可用checkpoint
+    ckpt_path = args.resume or max(glob.glob(os.path.join('lightning_logs', VERSION, 'checkpoints', '*.ckpt')), 
+                                    key=os.path.getmtime, default=None)
+    print(f"自动恢复训练: {ckpt_path}" if ckpt_path else "开始新训练")
+
+    trainer = pl.Trainer(
+        accelerator='gpu', devices='auto', max_epochs=25,
+        logger=logger, enable_checkpointing=True, default_root_dir='.',
+        num_sanity_val_steps=0,
+        callbacks=[pl.callbacks.ModelCheckpoint(
+            dirpath=os.path.join('lightning_logs', VERSION, 'checkpoints'),
+            filename='{epoch:02d}-{step}',
+            save_last=True,
+            every_n_epochs=5  # 每5个epoch保存一次模型
+        )]
+    )
+
     model = GAN()
-    trainer = pl.Trainer(accelerator='gpu', devices='auto', max_epochs=20)
-    trainer.fit(model)
+    # 直接调用 trainer.fit(model, train_loader)
+    trainer.fit(model, ckpt_path=ckpt_path)

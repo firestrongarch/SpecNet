@@ -9,3 +9,17 @@
     pip3 install torch torchvision torchaudio -i https://download.pytorch.org/whl/cu126
     pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
     ```
+
+## 训练说明
+- 开始训练:
+```bash
+python GAN.py
+```
+如果检测到 `lightning_logs/V1/checkpoints/last.ckpt` 存在，将自动从该断点恢复训练。
+
+- 从指定checkpoint恢复训练:
+```bash
+python GAN.py --resume path/to/your/checkpoint.ckpt
+```
+
+训练过程中的checkpoint会自动保存在`lightning_logs/V1/checkpoints`目录下。
